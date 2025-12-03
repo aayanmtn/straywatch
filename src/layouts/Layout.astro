@@ -2,12 +2,34 @@
 interface Props {
   title?: string;
   description?: string;
+  canonical?: string;
+  image?: string;
 }
 
-const { 
+const defaultSite = 'https://straywatch.org';
+const {
   title = 'StrayWatch - Community Safety for Leh, Ladakh',
-  description = 'Track stray dog populations, bite incidents, and garbage hotspots in Leh, Ladakh'
+  description = 'Track stray dog populations, bite incidents, and garbage hotspots in Leh, Ladakh',
+  canonical: canonicalProp,
+  image: imageProp,
 } = Astro.props;
+
+const siteOrigin = Astro.site?.href ?? defaultSite;
+const canonical = canonicalProp ?? siteOrigin;
+const socialImage = new URL(imageProp ?? '/favicon.svg', siteOrigin).toString();
+const keywords = 'StrayWatch, Leh Ladakh, stray dog reports, rabies bites, garbage hotspots, civic tech, animal welfare';
+const orgSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'StrayWatch',
+  url: siteOrigin,
+  logo: new URL('/favicon.svg', siteOrigin).toString(),
+  sameAs: [
+    'https://straywatch.org',
+    'https://github.com/aayanmtn/straywatch'
+  ],
+  description,
+};
 ---
 
 <!doctype html>
@@ -16,6 +38,24 @@ const {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
+    <meta name="keywords" content={keywords} />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href={canonical} />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={socialImage} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImage} />
+
+    <script type="application/ld+json">{JSON.stringify(orgSchema)}</script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
     
