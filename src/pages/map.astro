@@ -1,0 +1,8 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { HomeIsland } from '../components/HomeIsland';
+---
+
+<Layout title="StrayWatch Map" description="Live reports for strays, bites, and garbage hotspots in Leh, Ladakh">
+  <HomeIsland client:only="react" />
+</Layout>

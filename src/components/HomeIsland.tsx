@@ -1,6 +1,7 @@
+import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
-import { Plus, Dog, AlertTriangle, Trash2, User, LogOut, Menu, AlertCircle } from 'lucide-react';
+import { Plus, Dog, AlertTriangle, Trash2, User, LogOut, Menu, AlertCircle, Search } from 'lucide-react';
 import { LeafletMap } from './LeafletMap';
 import { AuthModal } from './AuthModal';
 import { ReportForm } from './ReportForm';
@@ -11,6 +12,7 @@ import { useAuthStore, useUIStore } from '@/lib/store';
 import { fetchReports, getReportStats } from '@/lib/api';
 import { signOut, isSupabaseConfigured } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +48,76 @@ function StatsBar({ sightings, bites, garbage }: { sightings: number; bites: num
         </div>
       </Card>
     </div>
+  );
+}
+
+function MapSearchBar({ disabled }: { disabled?: boolean }) {
+  const [query, setQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const { toast } = useToast();
+  const setSelectedLocation = useUIStore((state) => state.setSelectedLocation);
+
+  const handleSearch = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!query.trim() || disabled || isSearching) {
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const params = new URLSearchParams({
+        q: query.trim(),
+        format: 'json',
+        addressdetails: '0',
+        polygon_geojson: '0',
+        limit: '1',
+      });
+      const response = await fetch(`/api/geocode?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error('Search failed');
+      }
+
+      const results: Array<{ lat: string; lon: string; display_name: string }> = await response.json();
+
+      if (!results.length) {
+        toast({ title: 'No locations found', type: 'info' });
+        return;
+      }
+
+      const { lat, lon, display_name: displayName } = results[0];
+      setSelectedLocation({ lat: parseFloat(lat), lng: parseFloat(lon) });
+      toast({ title: 'Location found', description: displayName, type: 'success' });
+    } catch (error) {
+      console.error('Search error', error);
+      toast({ title: 'Unable to search right now', type: 'error' });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  return (
+    <form
+      onSubmit={handleSearch}
+      className="absolute left-1/2 -translate-x-1/2 bottom-6 z-20 flex items-center gap-2 bg-white px-4 py-2 sm:px-4 sm:py-2 pr-16 sm:pr-4 rounded-full shadow-lg border w-[min(90%,480px)]"
+    >
+      <Search className="w-4 h-4 text-gray-400" />
+      <input
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="Search a landmark, street, or area"
+        className="flex-1 bg-transparent text-sm outline-none"
+        disabled={disabled}
+        aria-label="Search location"
+      />
+      <button
+        type="submit"
+        className="px-3 py-1 text-sm font-semibold text-blue-600 disabled:text-gray-400"
+        disabled={disabled || isSearching}
+      >
+        {isSearching ? 'Searching…' : 'Go'}
+      </button>
+    </form>
   );
 }
 
@@ -174,9 +246,11 @@ function HomeContent() {
           <LeafletMap reports={reports} />
         )}
 
+        <MapSearchBar disabled={isLoading} />
+
         <button
           onClick={handleAddReport}
-          className="absolute bottom-6 right-6 z-10 w-14 h-14 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+          className="absolute bottom-20 sm:bottom-6 right-6 z-10 w-14 h-14 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95"
         >
           <Plus className="w-6 h-6" />
         </button>
