@@ -31,3 +31,6 @@ npm-debug.log*
 .config/
 .local/
 supabase/.temp/
+
+# Local Netlify folder
+.netlify
