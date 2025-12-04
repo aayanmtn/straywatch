@@ -28,7 +28,7 @@ const orgSchema = {
     'https://straywatch.org',
     'https://github.com/aayanmtn/straywatch'
   ],
-  description,
+  description: description,
 };
 ---
 
@@ -55,7 +55,7 @@ const orgSchema = {
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={socialImage} />
 
-    <script type="application/ld+json">{JSON.stringify(orgSchema)}</script>
+    <script type="application/ld+json" set:html={JSON.stringify(orgSchema)}></script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
     
