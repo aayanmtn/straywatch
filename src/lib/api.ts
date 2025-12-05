@@ -59,6 +59,12 @@ export async function createReport(report: CreateReportData): Promise<Report> {
   // Get user metadata for contributor info
   const metadata = (user as any).user_metadata || {};
   
+  console.log('Creating report with contributor info:', {
+    name: metadata.name,
+    from: metadata.from,
+    user_id: user.id
+  });
+  
   const { data, error } = await supabase
     .from('reports')
     .insert({
@@ -71,6 +77,9 @@ export async function createReport(report: CreateReportData): Promise<Report> {
     .single();
   
   if (error) throw error;
+  
+  console.log('Report created:', data);
+  
   return data;
 }
 
