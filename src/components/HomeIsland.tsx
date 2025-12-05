@@ -202,7 +202,7 @@ function HomeContent() {
                   />
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border z-30 py-1">
                     <p className="px-4 py-2 text-sm text-gray-500 border-b">
-                      {user.email}
+                      {(user as any).user_metadata?.name || user.email}
                     </p>
                     <a
                       href="/profile"

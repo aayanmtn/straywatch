@@ -15,6 +15,8 @@ export function AuthModal() {
   const [loading, setLoading] = useState(false);
   const [signInEmail, setSignInEmail] = useState('');
   const [signInPassword, setSignInPassword] = useState('');
+  const [signUpName, setSignUpName] = useState('');
+  const [signUpFrom, setSignUpFrom] = useState('');
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
   const [signUpConfirmPassword, setSignUpConfirmPassword] = useState('');
@@ -49,7 +51,7 @@ export function AuthModal() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!signUpEmail || !signUpPassword || !signUpConfirmPassword) {
+    if (!signUpName || !signUpFrom || !signUpEmail || !signUpPassword || !signUpConfirmPassword) {
       toast({ title: 'Please fill in all fields', type: 'error' });
       return;
     }
@@ -66,7 +68,7 @@ export function AuthModal() {
 
     setLoading(true);
     try {
-      const { user } = await signUp(signUpEmail, signUpPassword);
+      const { user } = await signUp(signUpEmail, signUpPassword, { name: signUpName, from: signUpFrom });
       if (user) {
         setUser(user);
         toast({ 
@@ -75,6 +77,8 @@ export function AuthModal() {
           type: 'success' 
         });
         closeAuthModal();
+        setSignUpName('');
+        setSignUpFrom('');
         setSignUpEmail('');
         setSignUpPassword('');
         setSignUpConfirmPassword('');
@@ -124,6 +128,22 @@ export function AuthModal() {
 
         <TabsContent value="signup">
           <form onSubmit={handleSignUp} className="space-y-4">
+            <Input
+              label="Name"
+              type="text"
+              placeholder="Your full name"
+              value={signUpName}
+              onChange={(e) => setSignUpName(e.target.value)}
+              disabled={loading}
+            />
+            <Input
+              label="From"
+              type="text"
+              placeholder="Your location (e.g., Leh, Ladakh)"
+              value={signUpFrom}
+              onChange={(e) => setSignUpFrom(e.target.value)}
+              disabled={loading}
+            />
             <Input
               label="Email"
               type="email"

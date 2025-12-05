@@ -120,7 +120,10 @@ function ProfileContent() {
               <User className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <p className="font-medium">{user.email}</p>
+              <p className="font-medium">{(user as any).user_metadata?.name || user.email}</p>
+              {(user as any).user_metadata?.from && (
+                <p className="text-xs text-gray-400">From {(user as any).user_metadata.from}</p>
+              )}
               <p className="text-sm text-gray-500">
                 {reports.length} report{reports.length !== 1 ? 's' : ''} submitted
               </p>

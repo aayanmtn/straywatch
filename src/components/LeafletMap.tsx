@@ -1,8 +1,25 @@
 import { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup, useMapEvents, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
+import L from 'leaflet';
 import type { Report } from '@/lib/supabase';
-import { LEH_CENTER, DEFAULT_ZOOM, REPORT_COLORS, REPORT_LABELS, getMarkerRadius, formatDate } from '@/lib/utils';
+import { LEH_CENTER, DEFAULT_ZOOM, REPORT_COLORS, REPORT_LABELS, formatDate } from '@/lib/utils';
 import { useUIStore } from '@/lib/store';
+
+const REPORT_ICONS = {
+  sighting: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="${REPORT_COLORS.sighting}" stroke="white" stroke-width="1.5"><path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.96-1.45 2.344-2.5"></path><path d="M14.267 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.855-1.45-2.239-2.5"></path><path d="M8 14v.5"></path><path d="M16 14v.5"></path><path d="M11.25 16.25h1.5L12 17l-.75-.75Z"></path><path d="M4.42 11.247A13.152 13.152 0 0 0 4 14.556C4 18.728 7.582 21 12 21s8-2.272 8-6.444c0-1.061-.162-2.2-.493-3.309m-9.243-6.082A8.801 8.801 0 0 1 12 5c.78 0 1.5.108 2.161.306"></path></svg>`,
+  bite: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="${REPORT_COLORS.bite}" stroke="white" stroke-width="1.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>`,
+  garbage: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="${REPORT_COLORS.garbage}" stroke="white" stroke-width="1.5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>`,
+};
+
+function createReportIcon(type: 'sighting' | 'bite' | 'garbage') {
+  return L.divIcon({
+    html: REPORT_ICONS[type],
+    className: 'custom-marker-icon',
+    iconSize: [28, 28],
+    iconAnchor: [14, 28],
+    popupAnchor: [0, -28],
+  });
+}
 
 interface LeafletMapProps {
   reports: Report[];
@@ -54,15 +71,14 @@ export function LeafletMap({ reports, selectMode = false, onLocationSelect }: Le
       <MapController center={selectedLocation} />
       
       {selectedLocation && selectMode && (
-        <CircleMarker
-          center={[selectedLocation.lat, selectedLocation.lng]}
-          radius={12}
-          pathOptions={{
-            color: '#3B82F6',
-            fillColor: '#3B82F6',
-            fillOpacity: 0.6,
-            weight: 3,
-          }}
+        <Marker
+          position={[selectedLocation.lat, selectedLocation.lng]}
+          icon={L.divIcon({
+            html: '<div class="w-6 h-6 bg-blue-500 border-2 border-white rounded-full shadow-lg"></div>',
+            className: 'custom-marker-icon',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+          })}
         >
           <Popup>
             <div className="text-center">
@@ -72,20 +88,14 @@ export function LeafletMap({ reports, selectMode = false, onLocationSelect }: Le
               </p>
             </div>
           </Popup>
-        </CircleMarker>
+        </Marker>
       )}
       
       {!selectMode && reports.map((report) => (
-        <CircleMarker
+        <Marker
           key={report.id}
-          center={[report.lat, report.lng]}
-          radius={getMarkerRadius(report.count)}
-          pathOptions={{
-            color: REPORT_COLORS[report.type],
-            fillColor: REPORT_COLORS[report.type],
-            fillOpacity: 0.6,
-            weight: 2,
-          }}
+          position={[report.lat, report.lng]}
+          icon={createReportIcon(report.type)}
         >
           <Popup>
             <div className="min-w-[180px]">
@@ -109,7 +119,7 @@ export function LeafletMap({ reports, selectMode = false, onLocationSelect }: Le
               </div>
             </div>
           </Popup>
-        </CircleMarker>
+        </Marker>
       ))}
     </MapContainer>
   );

@@ -31,10 +31,13 @@ export interface User {
   email: string;
 }
 
-export async function signUp(email: string, password: string) {
+export async function signUp(email: string, password: string, metadata?: { name?: string; from?: string }) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      data: metadata || {},
+    },
   });
   if (error) throw error;
   return data;
