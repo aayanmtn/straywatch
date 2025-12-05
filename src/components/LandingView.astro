@@ -2,7 +2,13 @@
 import LiveMetrics from './LiveMetrics';
 
 import Leaderboard from './Leaderboard';
+import Onboarding from './Onboarding';
+import FloatingReportButton from './FloatingReportButton';
+import MapPreview from './MapPreview';
 ---
+
+<Onboarding client:only="react" />
+<FloatingReportButton client:only="react" />
 
 <div class="bg-slate-950 text-white">
   <div class="relative overflow-hidden">
@@ -27,7 +33,7 @@ import Leaderboard from './Leaderboard';
         </div>
         <nav class="hidden md:flex items-center gap-8 text-sm text-white/80">
           <a href="#mission" class="hover:text-white">Mission</a>
-          <a href="#coverage" class="hover:text-white">Coverage</a>
+          <a href="#coverage" class="hover:text-white">Root cause</a>
           <a href="#features" class="hover:text-white">Platform</a>
           <a href="#impact" class="hover:text-white">Impact</a>
           <a href="/map" class="px-4 py-2 bg-white text-slate-900 rounded-full font-semibold">Launch App</a>
@@ -40,13 +46,13 @@ import Leaderboard from './Leaderboard';
             Live in Leh District
           </p>
           <h1 class="mt-8 text-4xl md:text-6xl font-heading font-semibold leading-tight text-white">
-            Dispatch-grade intelligence for stray management and public health
+            Dispatch grade intelligence for stray management and public health
           </h1>
           <p class="mt-6 text-lg text-white/80 max-w-2xl">
-            StrayWatch.org combines neighborhood reporting, municipal workflows, and field operations so every incident involving street dogs, bites, or garbage attracts the right team within minutes.
+            File a report in seconds. Every incident sighting, bite, or garbage hotspot goes straight to the community map. 
           </p>
           <div class="mt-8 flex flex-col sm:flex-row gap-4">
-            <a href="/map" class="px-6 py-3 rounded-full bg-blue-500 text-white font-semibold text-center">Open live console</a>
+            <a href="/map" class="px-6 py-3 rounded-full bg-blue-500 text-white font-semibold text-center">Start Report</a>
             <a href="#coverage" class="px-6 py-3 rounded-full border border-white/20 text-white/90 text-center">See coverage plan</a>
           </div>
           <div class="mt-10 grid gap-6 text-sm text-white/80 sm:grid-cols-3">
@@ -86,16 +92,16 @@ import Leaderboard from './Leaderboard';
         <p class="text-sm font-semibold text-blue-600 uppercase tracking-[0.2em]">Why StrayWatch.org</p>
         <h2 class="mt-4 text-3xl font-heading font-semibold">One network for citizens, vets, sanitation, and animal welfare</h2>
         <p class="mt-4 text-gray-600">
-          We digitize every call, WhatsApp message, and on-ground observation into a structured workflow. From first alert to closure, every actor sees the same map, severity score, and contact trail.
+          StrayWatch.org is now live! Stray population report sightings, bites, and garbage hotspots in real-time. Every report goes straight to the map, making it easy for vets, sanitation crews, and animal welfare teams to coordinate response.
         </p>
         <div class="mt-8 grid gap-6">
           {[
-            { title: 'Unified command console', copy: 'Ops teams view live heatmaps, population trends, and pending responses in one interface.' },
-            { title: 'Evidence-rich reports', copy: 'Residents attach photos, severity, and counts so the triage desk never chases missing context.' },
-            { title: 'Accountability loops', copy: 'Automated nudges keep municipal and NGO partners aligned until hotspots are cleared.' },
+            { title: 'Real-time reporting', copy: 'Citizens file reports with photos and location details. Each report appears instantly on the community map.' },
+            { title: 'One shared map', copy: 'Vets, sanitation teams, and municipal partners see all incidents in one place with no delays.' },
+            { title: 'Community accountability', copy: 'Every report is timestamped and visible, creating transparency and encouraging faster action.' },
           ].map((item) => (
             <div class="flex gap-4">
-              <div class="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-semibold">*</div>
+              <div class="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-semibold">✓</div>
               <div>
                 <p class="font-semibold text-lg">{item.title}</p>
                 <p class="text-sm text-gray-600 mt-1">{item.copy}</p>
@@ -106,30 +112,30 @@ import Leaderboard from './Leaderboard';
       </div>
       <div class="bg-slate-900 text-white rounded-3xl p-8 flex flex-col justify-between shadow-2xl">
         <div>
-          <p class="text-sm uppercase tracking-[0.3em] text-blue-300">District pilot</p>
-          <p class="text-4xl font-bold mt-6">Ward coverage 64%</p>
-          <p class="text-sm text-white/70 mt-2">15 of 23 wards dispatching through StrayWatch as of Q4 2025.</p>
+          <p class="text-sm uppercase tracking-[0.3em] text-blue-300">Crisis context</p>
+          <p class="text-4xl font-bold mt-6">The stray problem is accelerating</p>
+          <p class="text-sm text-white/70 mt-2">Bite cases doubled in just two years.</p>
         </div>
         <div class="mt-12 grid grid-cols-2 gap-6 text-white/80 text-sm">
           <div>
-            <p class="text-xs uppercase tracking-[0.4em] text-blue-300">Sterilizations since 2013</p>
-            <p class="text-3xl font-bold text-white">27,000+</p>
-            <p>Yet packs rebound quickly in high-altitude terrain.</p>
+            <p class="text-xs uppercase tracking-[0.4em] text-blue-300">Bite cases · 2024</p>
+            <p class="text-3xl font-bold text-white">500+</p>
+            <p>vs 2,165 in 2022</p>
           </div>
           <div>
-            <p class="text-xs uppercase tracking-[0.4em] text-blue-300">Waste restrictions</p>
-            <p class="text-base font-semibold text-white">BNSS Sec. 163(1)</p>
-            <p>July 2024 order bans dumping food near army camps, hotels, restaurants.</p>
+            <p class="text-xs uppercase tracking-[0.4em] text-blue-300">Stray population</p>
+            <p class="text-base font-semibold text-white">9,000+</p>
+            <p>In Leh district alone</p>
           </div>
           <div>
-            <p class="text-xs uppercase tracking-[0.4em] text-blue-300">Population pressure</p>
-            <p class="text-3xl font-bold text-white">25,000+</p>
-            <p>Estimated feral dogs across Ladakh UT.</p>
+            <p class="text-xs uppercase tracking-[0.4em] text-blue-300">Peak months</p>
+            <p class="text-base font-semibold text-white">Nov–Mar</p>
+            <p>Winter starvation spikes</p>
           </div>
           <div>
-            <p class="text-xs uppercase tracking-[0.4em] text-blue-300">Field intelligence</p>
+            <p class="text-xs uppercase tracking-[0.4em] text-blue-300">Root cause</p>
             <p class="text-base font-semibold text-white">“Khibshank” hybrids</p>
-            <p>Wolf-dog crosses now patrol the outskirts with apex-predator behavior.</p>
+            <p>Tourism Expanding to valleys soon military logistics</p>
           </div>
         </div>
       </div>
@@ -247,7 +253,7 @@ import Leaderboard from './Leaderboard';
     <div class="container mx-auto px-4 py-20">
       <div class="flex flex-col lg:flex-row items-center gap-10">
         <div class="flex-1">
-          <p class="text-sm font-semibold text-blue-600 uppercase tracking-[0.2em]">Coverage view</p>
+          <p class="text-sm font-semibold text-blue-600 uppercase tracking-[0.2em]">Root cause view</p>
           <h2 class="mt-4 text-3xl font-heading font-semibold">Tile-level monitoring with hourly syncs</h2>
           <p class="mt-4 text-gray-600">Each grid tile in Leh district is scored on animal population density, incident velocity, and sanitation backlog. Field partners claim tiles, push updates, and handoff tasks without leaving the map.</p>
           <ul class="mt-6 space-y-4 text-sm text-gray-600">
@@ -289,6 +295,45 @@ import Leaderboard from './Leaderboard';
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="map-demo" class="bg-slate-50 text-slate-900">
+    <div class="container mx-auto px-4 py-20">
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <p class="text-sm font-semibold text-blue-600 uppercase tracking-[0.2em]">Live map</p>
+        <h2 class="mt-4 text-3xl font-heading font-semibold">See incidents as they happen</h2>
+        <p class="mt-4 text-gray-600">Every report appears instantly on the map. Zoom in to see details, clusters show density by incident type.</p>
+      </div>
+
+      <MapPreview client:only="react" />
+
+      <div class="mt-12 grid md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-2xl p-6 border border-slate-200">
+          <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center text-red-600 text-lg mb-4">⚠️</div>
+          <h3 class="font-semibold text-lg mb-2">Bite incidents</h3>
+          <p class="text-sm text-gray-600">Red markers show reported bites. Highest priority for medical follow-up.</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-slate-200">
+          <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 text-lg mb-4">🐕</div>
+          <h3 class="font-semibold text-lg mb-2">Sightings</h3>
+          <p class="text-sm text-gray-600">Amber markers track stray sightings. Help crews predict pack movements.</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-slate-200">
+          <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 text-lg mb-4">♻️</div>
+          <h3 class="font-semibold text-lg mb-2">Waste hotspots</h3>
+          <p class="text-sm text-gray-600">Green markers identify garbage attracting packs. Alert sanitation crews.</p>
+        </div>
+      </div>
+
+      <div class="mt-12 text-center">
+        <a href="/map" class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 shadow-lg">
+          Explore live map
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
       </div>
     </div>
   </section>

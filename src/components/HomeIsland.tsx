@@ -1,5 +1,5 @@
+import React, { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { Plus, Dog, AlertTriangle, Trash2, User, LogOut, Menu, AlertCircle, Search } from 'lucide-react';
 import { LeafletMap } from './LeafletMap';
@@ -273,7 +273,49 @@ function HomeContent() {
 export function HomeIsland() {
   return (
     <QueryClientProvider client={queryClient}>
-      <HomeContent />
+      <ErrorBoundary>
+        <HomeContent />
+      </ErrorBoundary>
     </QueryClientProvider>
   );
+}
+
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('HomeIsland Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="w-full h-screen flex items-center justify-center bg-slate-50 p-4">
+          <div className="text-center max-w-md">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Something went wrong</h2>
+            <p className="text-gray-600 mb-4">{this.state.error?.message}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
 }
