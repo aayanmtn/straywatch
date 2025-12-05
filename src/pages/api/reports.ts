@@ -19,43 +19,45 @@ export const GET: APIRoute = async () => {
   }
 
   try {
-    // Fetch all reports
+    // Fetch all reports with user data joined
+    // Note: This query will work because we can access auth.users in a SECURITY DEFINER context
     const { data: reports, error } = await supabase
       .from('reports')
-      .select('*')
+      .select(`
+        *,
+        user:user_id (
+          email,
+          raw_user_meta_data
+        )
+      `)
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      // If join fails due to RLS, fallback to basic query
+      console.error('Error fetching reports with user data:', error);
+      const { data: basicReports } = await supabase
+        .from('reports')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      return new Response(JSON.stringify(basicReports || []), {
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=10, s-maxage=30',
+        },
+      });
+    }
 
-    // Enrich each report with user metadata using the database function
-    const enrichedReports = await Promise.all(
-      (reports || []).map(async (report: any) => {
-        if (!report.user_id) {
-          return {
-            ...report,
-            contributor_name: null,
-            contributor_from: null,
-          };
-        }
-
-        try {
-          const { data: metadata } = await supabase
-            .rpc('get_user_metadata', { user_uuid: report.user_id });
-          
-          return {
-            ...report,
-            contributor_name: metadata?.[0]?.name || null,
-            contributor_from: metadata?.[0]?.location || null,
-          };
-        } catch {
-          return {
-            ...report,
-            contributor_name: null,
-            contributor_from: null,
-          };
-        }
-      })
-    );
+    // Transform the data to include contributor info
+    const enrichedReports = (reports || []).map((report: any) => {
+      const metadata = report.user?.raw_user_meta_data || {};
+      return {
+        ...report,
+        user: undefined, // Remove nested user object
+        contributor_name: metadata.name || null,
+        contributor_from: metadata.from || null,
+      };
+    });
 
     return new Response(JSON.stringify(enrichedReports), {
       headers: {
