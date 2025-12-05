@@ -19,47 +19,15 @@ export const GET: APIRoute = async () => {
   }
 
   try {
-    // Fetch all reports with user data joined
-    // Note: This query will work because we can access auth.users in a SECURITY DEFINER context
+    // Fetch all reports - contributor info is stored in the table
     const { data: reports, error } = await supabase
       .from('reports')
-      .select(`
-        *,
-        user:user_id (
-          email,
-          raw_user_meta_data
-        )
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) {
-      // If join fails due to RLS, fallback to basic query
-      console.error('Error fetching reports with user data:', error);
-      const { data: basicReports } = await supabase
-        .from('reports')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      return new Response(JSON.stringify(basicReports || []), {
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=10, s-maxage=30',
-        },
-      });
-    }
+    if (error) throw error;
 
-    // Transform the data to include contributor info
-    const enrichedReports = (reports || []).map((report: any) => {
-      const metadata = report.user?.raw_user_meta_data || {};
-      return {
-        ...report,
-        user: undefined, // Remove nested user object
-        contributor_name: metadata.name || null,
-        contributor_from: metadata.from || null,
-      };
-    });
-
-    return new Response(JSON.stringify(enrichedReports), {
+    return new Response(JSON.stringify(reports || []), {
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'public, max-age=10, s-maxage=30',

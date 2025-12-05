@@ -56,11 +56,16 @@ export async function createReport(report: CreateReportData): Promise<Report> {
     throw new Error('You must be logged in to create a report');
   }
   
+  // Get user metadata for contributor info
+  const metadata = (user as any).user_metadata || {};
+  
   const { data, error } = await supabase
     .from('reports')
     .insert({
       ...report,
       user_id: user.id,
+      contributor_name: metadata.name || null,
+      contributor_from: metadata.from || null,
     })
     .select()
     .single();
