@@ -24,6 +24,8 @@ export const GET: APIRoute = async ({ request }) => {
 
     const url = new URL(request.url);
     const userId = url.searchParams.get('user_id');
+    const userName = url.searchParams.get('user_name');
+    const userFrom = url.searchParams.get('user_from');
 
     // Fetch all reports and aggregate in memory (most reliable approach)
     const { data: reports, error } = await supabase
@@ -42,7 +44,7 @@ export const GET: APIRoute = async ({ request }) => {
     
     (reports || []).forEach((r: any) => {
       const name = r.contributor_name || 'Anonymous';
-      const key = r.user_id || `anon-${name}`;
+      const key = r.user_id || `anon-${name}-${r.contributor_from || 'unknown'}`;
       if (!counts[key]) {
         counts[key] = {
           user_id: r.user_id || null,
@@ -54,14 +56,30 @@ export const GET: APIRoute = async ({ request }) => {
       counts[key].count += 1;
     });
 
-    const aggregated = Object.values(counts)
-      .filter(item => item.contributor_name && item.contributor_name !== 'Anonymous')
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 6);
+    // Get top contributors (include Anonymous if no named contributors exist)
+    const allContributors = Object.values(counts)
+      .sort((a, b) => b.count - a.count);
+    
+    const namedContributors = allContributors.filter(item => 
+      item.contributor_name && item.contributor_name !== 'Anonymous'
+    );
+    
+    // If there are named contributors, show only those. Otherwise show top anonymous ones.
+    const aggregated = namedContributors.length > 0 
+      ? namedContributors.slice(0, 10)
+      : allContributors.slice(0, 10);
 
     let self = null;
     if (userId && counts[userId]) {
       self = counts[userId];
+      
+      // Override with current user metadata if provided
+      if (userName) {
+        self.contributor_name = userName;
+      }
+      if (userFrom) {
+        self.contributor_from = userFrom;
+      }
     }
 
     return new Response(JSON.stringify({ leaders: aggregated, self }), {

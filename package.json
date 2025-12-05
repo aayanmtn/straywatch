@@ -9,8 +9,8 @@
   },
   "dependencies": {
     "@astrojs/netlify": "^6.6.3",
-    "@astrojs/vercel": "^9.0.2",
     "@astrojs/react": "^4.2.0",
+    "@astrojs/vercel": "^9.0.2",
     "@supabase/supabase-js": "^2.47.10",
     "@tanstack/react-query": "^5.62.8",
     "astro": "^5.1.1",
@@ -21,6 +21,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-leaflet": "^4.2.1",
+    "react-leaflet-cluster": "^4.0.0",
     "tailwind-merge": "^2.6.0",
     "zustand": "^5.0.2"
   },

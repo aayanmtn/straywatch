@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap, CircleMarker } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import type { Report } from '@/lib/supabase';
 import { LEH_CENTER, DEFAULT_ZOOM, REPORT_COLORS, REPORT_LABELS, formatDate } from '@/lib/utils';
@@ -54,6 +55,10 @@ export function LeafletMap({ reports, selectMode = false, onLocationSelect }: Le
   const { selectedLocation } = useUIStore();
   const mapRef = useRef(null);
 
+  useEffect(() => {
+    console.log('LeafletMap rendering with', reports.length, 'reports', { selectMode });
+  }, [reports, selectMode]);
+
   return (
     <MapContainer
       ref={mapRef}
@@ -91,42 +96,93 @@ export function LeafletMap({ reports, selectMode = false, onLocationSelect }: Le
         </Marker>
       )}
       
-      {!selectMode && reports.map((report) => (
-        <Marker
-          key={report.id}
-          position={[report.lat, report.lng]}
-          icon={createReportIcon(report.type)}
+      {!selectMode && (
+        <MarkerClusterGroup
+          chunkedLoading
+          iconCreateFunction={(cluster) => {
+            const count = cluster.getChildCount();
+            const markers = cluster.getAllChildMarkers();
+            
+            // Count report types in cluster
+            const typeCounts = { sighting: 0, bite: 0, garbage: 0 };
+            markers.forEach((marker: any) => {
+              const report = reports.find(r => 
+                r.lat === marker.getLatLng().lat && r.lng === marker.getLatLng().lng
+              );
+              if (report) {
+                typeCounts[report.type]++;
+              }
+            });
+            
+            // Determine dominant type and color
+            let dominantType: 'sighting' | 'bite' | 'garbage' = 'sighting';
+            let maxCount = typeCounts.sighting;
+            if (typeCounts.bite > maxCount) {
+              dominantType = 'bite';
+              maxCount = typeCounts.bite;
+            }
+            if (typeCounts.garbage > maxCount) {
+              dominantType = 'garbage';
+            }
+            
+            const color = REPORT_COLORS[dominantType];
+            
+            let size = 'small';
+            let sizeClass = 'w-10 h-10 text-sm';
+            
+            if (count > 10) {
+              size = 'large';
+              sizeClass = 'w-16 h-16 text-lg';
+            } else if (count > 5) {
+              size = 'medium';
+              sizeClass = 'w-12 h-12 text-base';
+            }
+
+            return L.divIcon({
+              html: `<div class="${sizeClass} rounded-full border-4 border-white shadow-lg flex items-center justify-center text-white font-bold" style="background-color: ${color}">${count}</div>`,
+              className: 'custom-cluster-icon',
+              iconSize: L.point(40, 40, true),
+            });
+          }}
         >
-          <Popup>
-            <div className="min-w-[180px]">
-              <div 
-                className="inline-block px-2 py-0.5 rounded-full text-xs font-medium text-white mb-2"
-                style={{ backgroundColor: REPORT_COLORS[report.type] }}
-              >
-                {REPORT_LABELS[report.type]}
-              </div>
-              <div className="space-y-1 text-sm">
-                <p><span className="font-medium">Count:</span> {report.count}</p>
-                {report.severity && (
-                  <p><span className="font-medium">Severity:</span> {report.severity}</p>
-                )}
-                {report.notes && (
-                  <p><span className="font-medium">Notes:</span> {report.notes}</p>
-                )}
-                {report.contributor_name && (
-                  <p className="text-xs text-gray-600 mt-2">
-                    <span className="font-medium">Reported by:</span> {report.contributor_name}
-                    {report.contributor_from && ` · ${report.contributor_from}`}
-                  </p>
-                )}
-                <p className="text-gray-500 text-xs mt-2">
-                  {formatDate(report.created_at)}
-                </p>
-              </div>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+          {reports.map((report) => (
+            <Marker
+              key={report.id}
+              position={[report.lat, report.lng]}
+              icon={createReportIcon(report.type)}
+            >
+              <Popup>
+                <div className="min-w-[180px]">
+                  <div 
+                    className="inline-block px-2 py-0.5 rounded-full text-xs font-medium text-white mb-2"
+                    style={{ backgroundColor: REPORT_COLORS[report.type] }}
+                  >
+                    {REPORT_LABELS[report.type]}
+                  </div>
+                  <div className="space-y-1 text-sm">
+                    <p><span className="font-medium">Count:</span> {report.count}</p>
+                    {report.severity && (
+                      <p><span className="font-medium">Severity:</span> {report.severity}</p>
+                    )}
+                    {report.notes && (
+                      <p><span className="font-medium">Notes:</span> {report.notes}</p>
+                    )}
+                    {report.contributor_name && (
+                      <p className="text-xs text-gray-600 mt-2">
+                        <span className="font-medium">Reported by:</span> {report.contributor_name}
+                        {report.contributor_from && ` · ${report.contributor_from}`}
+                      </p>
+                    )}
+                    <p className="text-gray-500 text-xs mt-2">
+                      {formatDate(report.created_at)}
+                    </p>
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MarkerClusterGroup>
+      )}
     </MapContainer>
   );
 }
