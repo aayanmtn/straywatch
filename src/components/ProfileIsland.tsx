@@ -116,9 +116,9 @@ function ProfileContent() {
     return (
       <div className="min-h-screen flex flex-col">
         <header className="bg-white border-b px-4 py-3 flex items-center gap-3">
-          <a href="/" className="p-2 -ml-2 hover:bg-gray-100 rounded-lg">
+          <button onClick={() => window.history.back()} className="p-2 -ml-2 hover:bg-gray-100 rounded-lg">
             <ArrowLeft className="w-5 h-5" />
-          </a>
+          </button>
           <h1 className="text-lg font-bold font-heading">My Profile</h1>
         </header>
         
@@ -143,9 +143,9 @@ function ProfileContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b px-4 py-3 flex items-center gap-3">
-        <a href="/" className="p-2 -ml-2 hover:bg-gray-100 rounded-lg">
+        <button onClick={() => window.history.back()} className="p-2 -ml-2 hover:bg-gray-100 rounded-lg">
           <ArrowLeft className="w-5 h-5" />
-        </a>
+        </button>
         <h1 className="text-lg font-bold font-heading">My Reports</h1>
       </header>
 

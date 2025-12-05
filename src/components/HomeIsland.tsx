@@ -211,6 +211,13 @@ function HomeContent() {
                       <User className="w-4 h-4" />
                       My Reports
                     </a>
+                    <a
+                      href="/report-feedback"
+                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50"
+                    >
+                      <AlertCircle className="w-4 h-4" />
+                      Send Feedback
+                    </a>
                     <button
                       onClick={handleSignOut}
                       className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-50 w-full text-left"

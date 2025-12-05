@@ -1,0 +1,125 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Share Feedback · StrayWatch">
+  <div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 text-white">
+    <header class="border-b border-white/10 bg-slate-950/80 backdrop-blur px-4 py-4">
+      <div class="container mx-auto flex items-center justify-between">
+        <h1 class="text-2xl font-bold">Share Your Feedback</h1>
+        <button id="back-btn" class="text-sm text-blue-400 hover:text-blue-300">← Back to Map</button>
+      </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-12 max-w-2xl">
+      <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-8">
+        <div class="mb-8">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/20 border border-green-500/30 text-green-200 text-xs font-semibold mb-4">
+            ✓ Report submitted
+          </div>
+          <h2 class="text-3xl font-bold">Help us make StrayWatch better</h2>
+          <p class="mt-3 text-white/70">Your report was received. Now, how can we improve the app for you? Any issues or ideas?</p>
+        </div>
+
+        <form id="user-feedback-form" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-white/80 mb-2">What would help you most?</label>
+            <select id="category" class="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+              <option value="" disabled selected>Select topic</option>
+              <option value="map">Map & Location</option>
+              <option value="form">Report Form</option>
+              <option value="profile">Profile & History</option>
+              <option value="navigation">Navigation & UI</option>
+              <option value="mobile">Mobile Experience</option>
+              <option value="other">Something Else</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-white/80 mb-2">Your feedback</label>
+            <textarea 
+              id="message"
+              placeholder="What's working well? What could be better? Any ideas?" 
+              rows="6"
+              class="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              required
+            ></textarea>
+            <p class="text-xs text-white/50 mt-2">Be as detailed as you like—we read everything.</p>
+          </div>
+
+          <button 
+            type="submit"
+            class="w-full px-6 py-3 mt-6 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"
+          >
+            Send Feedback
+          </button>
+
+          <div id="status-message" class="hidden rounded-lg border px-4 py-3 text-sm"></div>
+        </form>
+
+        <div class="mt-8 pt-8 border-t border-white/10 space-y-3">
+          <p class="text-sm text-white/60 font-semibold">Next steps:</p>
+          <ul class="text-sm text-white/70 space-y-2">
+            <li>• Check your <a href="/profile" class="text-blue-400 hover:text-blue-300">profile</a> to see all your reports</li>
+            <li>• View the <a href="/" class="text-blue-400 hover:text-blue-300">leaderboard</a> to see top contributors</li>
+            <li>• Return to the <a href="/map" class="text-blue-400 hover:text-blue-300">live map</a> to add more reports</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const backBtn = document.getElementById('back-btn');
+    
+    backBtn?.addEventListener('click', () => {
+      // Try to go back in history if we came from map
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        // Fallback to map if no history
+        window.location.href = '/map';
+      }
+    });
+
+    const form = document.getElementById('user-feedback-form');
+    const statusMsg = document.getElementById('status-message');
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const category = (document.getElementById('category') as HTMLSelectElement).value;
+      const message = (document.getElementById('message') as HTMLTextAreaElement).value;
+
+      statusMsg.classList.remove('hidden', 'border-green-500', 'bg-green-50', 'text-green-900', 'border-red-500', 'bg-red-50', 'text-red-900');
+
+      try {
+        const res = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: `[${category.toUpperCase()}] ${message}`,
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to send');
+        }
+
+        statusMsg.classList.add('border-green-500', 'bg-green-50', 'text-green-900');
+        statusMsg.textContent = '✓ Thanks for the feedback! We read everything and use it to make StrayWatch better.';
+        form.reset();
+        
+        setTimeout(() => {
+          window.location.href = '/map';
+        }, 2000);
+      } catch (error: any) {
+        statusMsg.classList.add('border-red-500', 'bg-red-50', 'text-red-900');
+        statusMsg.textContent = `✗ Error: ${error.message}`;
+      } finally {
+        statusMsg.classList.remove('hidden');
+      }
+    });
+  </script>
+</Layout>

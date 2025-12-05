@@ -129,6 +129,11 @@ export function ReportForm({ onSuccess, editReport }: ReportFormProps) {
       } else {
         await createReport(reportData);
         toast({ title: 'Report submitted successfully', type: 'success' });
+        // Redirect to feedback page for new reports
+        setTimeout(() => {
+          window.location.href = '/report-feedback';
+        }, 500);
+        return;
       }
       
       onSuccess();

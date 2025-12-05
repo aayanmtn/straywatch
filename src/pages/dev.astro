@@ -1,0 +1,89 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Developer Dashboard · StrayWatch">
+  <div class="min-h-screen bg-slate-900 text-white">
+    <header class="border-b border-white/10 bg-slate-950 px-4 py-4">
+      <div class="container mx-auto flex items-center justify-between">
+        <h1 class="text-2xl font-bold">Developer Dashboard</h1>
+        <a href="/" class="text-sm text-blue-400 hover:text-blue-300">← Back to site</a>
+      </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8">
+      <div id="feedback-container">
+        <div class="flex items-center justify-center py-12">
+          <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadFeedback() {
+      try {
+        const { data: session } = await fetch('/api/auth/session').then(r => r.json()).catch(() => ({ data: null }));
+        
+        // Try to get session from localStorage or via Supabase client
+        const token = localStorage.getItem('sb_token');
+        
+        const res = await fetch('/api/dev-feedback', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+
+        if (!res.ok) {
+          document.getElementById('feedback-container').innerHTML = `
+            <div class="rounded-lg border border-red-500 bg-red-50 px-4 py-3 text-red-900">
+              <p class="font-semibold">Access denied</p>
+              <p class="text-sm">Only @straywatch.org developers can view feedback.</p>
+            </div>
+          `;
+          return;
+        }
+
+        const feedback = await res.json();
+        
+        if (!feedback || feedback.length === 0) {
+          document.getElementById('feedback-container').innerHTML = `
+            <div class="rounded-lg border border-slate-600 bg-slate-800 px-4 py-3">
+              <p class="text-slate-300">No feedback yet.</p>
+            </div>
+          `;
+          return;
+        }
+
+        const html = feedback
+          .map((f) => `
+            <div class="rounded-lg border border-slate-700 bg-slate-800 p-4 space-y-2">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="font-semibold text-white">${f.name || 'Anonymous'}</p>
+                  <p class="text-xs text-slate-400">${f.email || '(no email)'}</p>
+                </div>
+                <p class="text-xs text-slate-500">${new Date(f.created_at).toLocaleString()}</p>
+              </div>
+              <p class="text-slate-300 text-sm leading-relaxed">${f.message}</p>
+            </div>
+          `)
+          .join('');
+
+        document.getElementById('feedback-container').innerHTML = `
+          <div class="space-y-4">
+            <p class="text-slate-400">${feedback.length} submission${feedback.length !== 1 ? 's' : ''}</p>
+            ${html}
+          </div>
+        `;
+      } catch (error) {
+        console.error('Error loading feedback:', error);
+        document.getElementById('feedback-container').innerHTML = `
+          <div class="rounded-lg border border-red-500 bg-red-50 px-4 py-3 text-red-900">
+            <p>Failed to load feedback. Check console.</p>
+          </div>
+        `;
+      }
+    }
+
+    loadFeedback();
+  </script>
+</Layout>

@@ -1,5 +1,6 @@
 ---
 import LiveMetrics from './LiveMetrics';
+import Leaderboard from './Leaderboard';
 ---
 
 <div class="bg-slate-950 text-white">
@@ -355,6 +356,25 @@ import LiveMetrics from './LiveMetrics';
     </div>
   </section>
   -->
+
+  <section id="leaderboard" class="bg-slate-100 text-slate-900">
+    <div class="container mx-auto px-4 py-16 space-y-6">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div>
+          <p class="text-sm font-semibold text-blue-700 uppercase tracking-[0.2em]">Top contributors</p>
+          <h2 class="text-3xl font-heading font-semibold">Neighbors keeping Leh safer</h2>
+          <p class="text-sm text-slate-600 mt-2">Based on verified reports logged in the last 30 days.</p>
+        </div>
+        <a href="/map" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold shadow-lg shadow-blue-200/60">Open live map</a>
+      </div>
+
+      <Leaderboard client:only="react" />
+
+      <div class="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+        Want to be on the board? File verified reports with clear notes and locations. Safety leads rotate weekly based on community impact.
+      </div>
+    </div>
+  </section>
 
   <section id="contribute" class="bg-blue-950 text-white">
     <div class="container mx-auto px-4 py-16 grid lg:grid-cols-[1.2fr_0.8fr] gap-10">
