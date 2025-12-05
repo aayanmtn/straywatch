@@ -49,9 +49,9 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const body = await request.json();
-    const name = (body.name || '').toString().trim();
-    const email = (body.email || '').toString().trim();
     const message = (body.message || '').toString().trim();
+    const userEmail = userResult.user.email || 'unknown@user.local';
+    const userName = (userResult.user.user_metadata?.name || 'Anonymous').toString();
 
     if (!message) {
       return new Response(JSON.stringify({ error: 'Message is required' }), {
@@ -60,11 +60,49 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    const { error } = await supabase
+    // Store feedback in database
+    const { error: insertError } = await supabase
       .from('feedback')
-      .insert({ name: name || null, email: email || null, message });
+      .insert({ 
+        name: userName, 
+        email: userEmail, 
+        message 
+      });
 
-    if (error) throw error;
+    if (insertError) {
+      console.error('Failed to store feedback:', insertError);
+      // Continue anyway - we'll log it
+    }
+
+    // Try to send email if configured, but don't fail if not
+    const resendApiKey = env.RESEND_API_KEY;
+    if (resendApiKey) {
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${resendApiKey}`,
+          },
+          body: JSON.stringify({
+            from: 'feedback@straywatch.org',
+            to: 'info@straywatch.org',
+            subject: `New Feedback from ${userEmail}`,
+            html: `
+              <h2>New Feedback Submission</h2>
+              <p><strong>From:</strong> ${userName} (${userEmail})</p>
+              <p><strong>Message:</strong></p>
+              <p>${message.replace(/\n/g, '<br>')}</p>
+              <hr>
+              <p><small>Submitted via StrayWatch Feedback Form</small></p>
+            `,
+          }),
+        });
+      } catch (emailError) {
+        console.error('Failed to send email notification:', emailError);
+        // Don't fail the request if email fails
+      }
+    }
 
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
