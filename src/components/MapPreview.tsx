@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { LeafletMap } from './LeafletMap';
 
 interface MapPreviewProps {
@@ -14,49 +14,39 @@ interface MapPreviewProps {
 }
 
 export default function MapPreview({ reports = [] }: MapPreviewProps) {
-  // Sample reports for preview if none provided
-  const sampleReports = reports.length > 0 ? reports : [
-    {
-      id: '1',
-      type: 'bite',
-      lat: 34.1526,
-      lng: 77.5771,
-      count: 1,
-      severity: 'high',
-      notes: 'Dog bite near market'
-    },
-    {
-      id: '2',
-      type: 'sighting',
-      lat: 34.1626,
-      lng: 77.5871,
-      count: 3,
-      severity: null,
-      notes: 'Pack spotted near park'
-    },
-    {
-      id: '3',
-      type: 'garbage',
-      lat: 34.1426,
-      lng: 77.5671,
-      count: 1,
-      severity: null,
-      notes: 'Food waste near restaurant'
-    },
-    {
-      id: '4',
-      type: 'sighting',
-      lat: 34.1550,
-      lng: 77.5750,
-      count: 2,
-      severity: null,
-      notes: 'Strays near school'
-    }
-  ];
+  const [liveReports, setLiveReports] = useState(reports);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const response = await fetch('/api/reports');
+        if (response.ok) {
+          const data = await response.json();
+          setLiveReports(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch reports:', error);
+        setLiveReports([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchReports();
+  }, []);
 
   return (
-    <div className="w-full h-96 rounded-3xl overflow-hidden shadow-2xl border border-slate-200">
-      <LeafletMap reports={sampleReports} />
+    <div className="w-full h-96 rounded-3xl overflow-hidden shadow-2xl border border-slate-200 relative">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+            <p className="text-sm text-gray-600">Loading live incidents...</p>
+          </div>
+        </div>
+      )}
+      <LeafletMap reports={liveReports} />
     </div>
   );
 }
