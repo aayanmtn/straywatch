@@ -5,25 +5,24 @@ export async function fetchReports(): Promise<Report[]> {
     return [];
   }
   
-  const { data, error } = await supabase
-    .from('reports')
-    .select(`
-      *,
-      contributor:user_id (
-        raw_user_meta_data
-      )
-    `)
-    .order('created_at', { ascending: false });
-  
-  if (error) throw error;
-  
-  // Map contributor metadata to flat fields
-  return (data || []).map((item: any) => ({
-    ...item,
-    contributor_name: item.contributor?.raw_user_meta_data?.name,
-    contributor_from: item.contributor?.raw_user_meta_data?.from,
-    contributor: undefined, // remove nested object
-  }));
+  // Fetch from our API endpoint which handles user metadata enrichment
+  try {
+    const response = await fetch('/api/reports');
+    if (!response.ok) {
+      throw new Error('Failed to fetch reports');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching reports:', error);
+    // Fallback to basic query without contributor info
+    const { data, error: dbError } = await supabase
+      .from('reports')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (dbError) throw dbError;
+    return data || [];
+  }
 }
 
 export async function fetchUserReports(userId: string): Promise<Report[]> {

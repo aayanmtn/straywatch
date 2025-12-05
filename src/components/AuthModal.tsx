@@ -4,7 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/Tabs';
 import { Input } from './ui/Input';
 import { Button } from './ui/Button';
 import { useUIStore, useAuthStore } from '@/lib/store';
-import { signIn, signUp } from '@/lib/supabase';
+import { signIn, signUp, resetPassword } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
 export function AuthModal() {
@@ -13,6 +13,8 @@ export function AuthModal() {
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
   const [signInEmail, setSignInEmail] = useState('');
   const [signInPassword, setSignInPassword] = useState('');
   const [signUpName, setSignUpName] = useState('');
@@ -103,27 +105,68 @@ export function AuthModal() {
         </TabsList>
 
         <TabsContent value="signin">
-          <form onSubmit={handleSignIn} className="space-y-4">
-            <Input
-              label="Email"
-              type="email"
-              placeholder="your@email.com"
-              value={signInEmail}
-              onChange={(e) => setSignInEmail(e.target.value)}
-              disabled={loading}
-            />
-            <Input
-              label="Password"
-              type="password"
-              placeholder="Enter your password"
-              value={signInPassword}
-              onChange={(e) => setSignInPassword(e.target.value)}
-              disabled={loading}
-            />
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign In'}
-            </Button>
-          </form>
+          {showForgotPassword ? (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <p className="text-sm text-gray-600 mb-4">Enter your email address and we'll send you a link to reset your password.</p>
+              <Input
+                label="Email"
+                type="email"
+                placeholder="your@email.com"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                disabled={loading}
+              />
+              <div className="flex gap-2">
+                <Button 
+                  type="button" 
+                  variant="secondary" 
+                  className="flex-1" 
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setResetEmail('');
+                  }}
+                  disabled={loading}
+                >
+                  Back
+                </Button>
+                <Button type="submit" className="flex-1" disabled={loading}>
+                  {loading ? 'Sending...' : 'Send Reset Link'}
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <Input
+                label="Email"
+                type="email"
+                placeholder="your@email.com"
+                value={signInEmail}
+                onChange={(e) => setSignInEmail(e.target.value)}
+                disabled={loading}
+              />
+              <Input
+                label="Password"
+                type="password"
+                placeholder="Enter your password"
+                value={signInPassword}
+                onChange={(e) => setSignInPassword(e.target.value)}
+                disabled={loading}
+              />
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-blue-600 hover:text-blue-700"
+                  disabled={loading}
+                >
+                  Forgot password?
+                </button>
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Signing in...' : 'Sign In'}
+              </Button>
+            </form>
+          )}
         </TabsContent>
 
         <TabsContent value="signup">

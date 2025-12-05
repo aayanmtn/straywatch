@@ -4,11 +4,13 @@ import { ArrowLeft, Dog, AlertTriangle, Trash2, Edit, Trash, MapPin, Calendar, U
 import { Button } from './ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { Dialog } from './ui/Dialog';
+import { Input } from './ui/Input';
 import { ToastContainer } from './ui/Toast';
 import { ReportForm } from './ReportForm';
 import { AuthModal } from './AuthModal';
 import { useAuthStore, useUIStore } from '@/lib/store';
 import { fetchUserReports, deleteReport } from '@/lib/api';
+import { updateUserProfile } from '@/lib/supabase';
 import { REPORT_COLORS, REPORT_LABELS, formatDate } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import type { Report } from '@/lib/supabase';
@@ -30,6 +32,10 @@ function ProfileContent() {
   const [editingReport, setEditingReport] = useState<Report | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileName, setProfileName] = useState('');
+  const [profileFrom, setProfileFrom] = useState('');
+  const [updatingProfile, setUpdatingProfile] = useState(false);
 
   useEffect(() => {
     initialize();
@@ -60,6 +66,36 @@ function ProfileContent() {
       toast({ title: 'Failed to delete report', description: error.message, type: 'error' });
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleEditProfile = () => {
+    setProfileName((user as any).user_metadata?.name || '');
+    setProfileFrom((user as any).user_metadata?.from || '');
+    setEditingProfile(true);
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUpdatingProfile(true);
+    try {
+      const { user: updatedUser } = await updateUserProfile({ 
+        name: profileName, 
+        from: profileFrom 
+      });
+      if (updatedUser) {
+        useAuthStore.getState().setUser(updatedUser);
+        toast({ title: 'Profile updated successfully', type: 'success' });
+        setEditingProfile(false);
+      }
+    } catch (error: any) {
+      toast({ 
+        title: 'Failed to update profile', 
+        description: error.message,
+        type: 'error' 
+      });
+    } finally {
+      setUpdatingProfile(false);
     }
   };
 
@@ -115,18 +151,43 @@ function ProfileContent() {
 
       <div className="p-4">
         <Card className="mb-4">
-          <CardContent className="flex items-center gap-4 py-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <User className="w-6 h-6 text-blue-600" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-base font-semibold">About</CardTitle>
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={handleEditProfile}
+            >
+              <Edit className="w-4 h-4 mr-1" />
+              Edit
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <User className="w-8 h-8 text-blue-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-lg truncate">
+                  {(user as any).user_metadata?.name || 'Anonymous User'}
+                </p>
+                <p className="text-sm text-gray-500 truncate">{user.email}</p>
+              </div>
             </div>
-            <div>
-              <p className="font-medium">{(user as any).user_metadata?.name || user.email}</p>
+            
+            <div className="grid gap-2 pt-2">
               {(user as any).user_metadata?.from && (
-                <p className="text-xs text-gray-400">From {(user as any).user_metadata.from}</p>
+                <div className="flex items-center gap-2 text-sm">
+                  <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <span className="text-gray-700">{(user as any).user_metadata.from}</span>
+                </div>
               )}
-              <p className="text-sm text-gray-500">
-                {reports.length} report{reports.length !== 1 ? 's' : ''} submitted
-              </p>
+              <div className="flex items-center gap-2 text-sm">
+                <Dog className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <span className="text-gray-700">
+                  {reports.length} contribution{reports.length !== 1 ? 's' : ''}
+                </span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -247,6 +308,50 @@ function ProfileContent() {
             {deleting ? 'Deleting...' : 'Delete'}
           </Button>
         </div>
+      </Dialog>
+
+      <Dialog open={editingProfile} onClose={() => setEditingProfile(false)}>
+        <h3 className="text-lg font-bold mb-4">Edit Profile</h3>
+        <form onSubmit={handleUpdateProfile} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Name</label>
+            <Input
+              type="text"
+              value={profileName}
+              onChange={(e) => setProfileName(e.target.value)}
+              placeholder="Your name"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Location</label>
+            <Input
+              type="text"
+              value={profileFrom}
+              onChange={(e) => setProfileFrom(e.target.value)}
+              placeholder="Your location"
+              required
+            />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setEditingProfile(false)}
+              disabled={updatingProfile}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={updatingProfile}
+              className="flex-1"
+            >
+              {updatingProfile ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        </form>
       </Dialog>
 
       <ReportForm onSuccess={handleFormSuccess} editReport={editingReport} />
