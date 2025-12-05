@@ -113,6 +113,12 @@ export function LeafletMap({ reports, selectMode = false, onLocationSelect }: Le
                 {report.notes && (
                   <p><span className="font-medium">Notes:</span> {report.notes}</p>
                 )}
+                {report.contributor_name && (
+                  <p className="text-xs text-gray-600 mt-2">
+                    <span className="font-medium">Reported by:</span> {report.contributor_name}
+                    {report.contributor_from && ` · ${report.contributor_from}`}
+                  </p>
+                )}
                 <p className="text-gray-500 text-xs mt-2">
                   {formatDate(report.created_at)}
                 </p>

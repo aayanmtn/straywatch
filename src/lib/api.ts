@@ -7,11 +7,23 @@ export async function fetchReports(): Promise<Report[]> {
   
   const { data, error } = await supabase
     .from('reports')
-    .select('*')
+    .select(`
+      *,
+      contributor:user_id (
+        raw_user_meta_data
+      )
+    `)
     .order('created_at', { ascending: false });
   
   if (error) throw error;
-  return data || [];
+  
+  // Map contributor metadata to flat fields
+  return (data || []).map((item: any) => ({
+    ...item,
+    contributor_name: item.contributor?.raw_user_meta_data?.name,
+    contributor_from: item.contributor?.raw_user_meta_data?.from,
+    contributor: undefined, // remove nested object
+  }));
 }
 
 export async function fetchUserReports(userId: string): Promise<Report[]> {

@@ -24,6 +24,8 @@ export interface Report {
   notes: string | null;
   user_id: string | null;
   created_at: string;
+  contributor_name?: string | null;
+  contributor_from?: string | null;
 }
 
 export interface User {
