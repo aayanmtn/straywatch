@@ -25,60 +25,24 @@ export const GET: APIRoute = async ({ request }) => {
     const url = new URL(request.url);
     const userId = url.searchParams.get('user_id');
 
-    // Primary: aggregate in SQL
-    const { data, error } = await supabase
-      .from('reports')
-      .select('user_id, contributor_name, contributor_from, count:count(id)')
-      .gte('created_at', since.toISOString())
-      .group('user_id, contributor_name, contributor_from')
-      .order('count', { ascending: false })
-      .limit(6);
-
-    if (!error && data) {
-      const sanitized = data.map((row: any) => ({
-        user_id: row.user_id,
-        contributor_name: row.contributor_name || 'Anonymous',
-        contributor_from: row.contributor_from || null,
-        count: Number(row.count) || 0,
-      }));
-
-      // Optionally fetch self count if requested
-      let self = null;
-      if (userId) {
-        const { data: selfData } = await supabase
-          .from('reports')
-          .select('contributor_name, contributor_from, count:count(id)')
-          .eq('user_id', userId)
-          .gte('created_at', since.toISOString())
-          .single();
-        if (selfData) {
-          self = {
-            user_id: userId,
-            contributor_name: selfData.contributor_name || 'You',
-            contributor_from: selfData.contributor_from || null,
-            count: Number(selfData.count) || 0,
-          };
-        }
-      }
-
-      return new Response(JSON.stringify({ leaders: sanitized, self }), {
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=30, s-maxage=60',
-        },
-      });
-    }
-
-    // Fallback: fetch recent reports and aggregate in memory (avoids RLS aggregate issues)
-    const { data: reports } = await supabase
+    // Fetch all reports and aggregate in memory (most reliable approach)
+    const { data: reports, error } = await supabase
       .from('reports')
       .select('user_id, contributor_name, contributor_from, created_at')
       .gte('created_at', since.toISOString());
 
+    if (error) {
+      console.error('Leaderboard fetch error:', error);
+      return new Response(JSON.stringify({ leaders: [], self: null }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     const counts: Record<string, { user_id: string | null; contributor_name: string; contributor_from: string | null; count: number }> = {};
+    
     (reports || []).forEach((r: any) => {
       const name = r.contributor_name || 'Anonymous';
-      const key = r.user_id || name;
+      const key = r.user_id || `anon-${name}`;
       if (!counts[key]) {
         counts[key] = {
           user_id: r.user_id || null,
@@ -91,6 +55,7 @@ export const GET: APIRoute = async ({ request }) => {
     });
 
     const aggregated = Object.values(counts)
+      .filter(item => item.contributor_name && item.contributor_name !== 'Anonymous')
       .sort((a, b) => b.count - a.count)
       .slice(0, 6);
 
@@ -105,12 +70,12 @@ export const GET: APIRoute = async ({ request }) => {
         'Cache-Control': 'public, max-age=30, s-maxage=60',
       },
     });
-  } catch (error) {
-    console.error('Leaderboard API error:', error);
-    // Return empty list but keep 200 to avoid client error state
+  } catch (err: any) {
+    console.error('Leaderboard error:', err);
     return new Response(JSON.stringify({ leaders: [], self: null }), {
-      status: 200,
+      status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 };
+
