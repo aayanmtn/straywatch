@@ -32,7 +32,7 @@ export default function Onboarding() {
       title: 'Welcome to StrayWatch',
       subtitle: 'Help us make Leh safer by reporting stray incidents',
       icon: '🐾',
-      description: 'Your reports help municipal teams, vets, and sanitation crews respond faster to street dog incidents.',
+      description: 'This newly launched platform is a community-led initiative, empowering individuals to take action on street dog incidents and contribute to the welfare of animals in their neighborhoods.',
     },
     {
       title: 'Report Incidents',
@@ -52,7 +52,7 @@ export default function Onboarding() {
       title: 'You\'re Ready!',
       subtitle: 'Start reporting now',
       icon: <CheckCircle className="w-12 h-12 text-green-500" />,
-      description: 'Every report counts. Early alerts help teams reach hotspots during peak hours.',
+      description: 'Every report counts. ',
     },
   ];
 
