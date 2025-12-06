@@ -17,6 +17,7 @@ Run these migrations in order in your Supabase SQL Editor:
 2. `002_enable_rls_policies.sql` - Enables Row Level Security policies
 3. `003_create_updated_at_trigger.sql` - Adds automatic timestamp updates
 4. `004_create_stats_view.sql` - Creates views for statistics
+5. `005_add_contributor_fields.sql` - Adds contributor_name and contributor_from fields
 
 ## Quick Setup (All-in-One)
 
@@ -43,6 +44,8 @@ You can also run all migrations at once by combining them:
 | user_id | UUID | Reference to auth.users |
 | created_at | TIMESTAMPTZ | Creation timestamp |
 | updated_at | TIMESTAMPTZ | Last update timestamp |
+| contributor_name | TEXT | Name of report submitter (from user metadata) |
+| contributor_from | TEXT | Location of contributor (from user metadata) |
 
 ### Views
 
