@@ -54,8 +54,66 @@ function StatsBar({ sightings, bites, garbage }: { sightings: number; bites: num
 function MapSearchBar({ disabled }: { disabled?: boolean }) {
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [suggestions, setSuggestions] = useState<Array<{ lat: string; lon: string; display_name: string }>>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const { toast } = useToast();
   const setSelectedLocation = useUIStore((state) => state.setSelectedLocation);
+  const searchTimeoutRef = React.useRef<NodeJS.Timeout>();
+
+  const fetchSuggestions = async (searchQuery: string) => {
+    if (!searchQuery.trim() || searchQuery.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    try {
+      const params = new URLSearchParams({
+        q: searchQuery.trim(),
+        format: 'json',
+        addressdetails: '1',
+        polygon_geojson: '0',
+        limit: '5',
+      });
+      const response = await fetch(`/api/geocode?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error('Search failed');
+      }
+
+      const results: Array<{ lat: string; lon: string; display_name: string }> = await response.json();
+      setSuggestions(results);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error('Autocomplete error', error);
+      setSuggestions([]);
+    }
+  };
+
+  const handleInputChange = (value: string) => {
+    setQuery(value);
+    
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (value.length >= 3) {
+      searchTimeoutRef.current = setTimeout(() => {
+        fetchSuggestions(value);
+      }, 300);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSelectSuggestion = (suggestion: { lat: string; lon: string; display_name: string }) => {
+    const { lat, lon, display_name: displayName } = suggestion;
+    setQuery(displayName);
+    setSelectedLocation({ lat: parseFloat(lat), lng: parseFloat(lon) });
+    setSuggestions([]);
+    setShowSuggestions(false);
+    toast({ title: 'Location found', description: displayName, type: 'success' });
+  };
 
   const handleSearch = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -87,6 +145,7 @@ function MapSearchBar({ disabled }: { disabled?: boolean }) {
 
       const { lat, lon, display_name: displayName } = results[0];
       setSelectedLocation({ lat: parseFloat(lat), lng: parseFloat(lon) });
+      setShowSuggestions(false);
       toast({ title: 'Location found', description: displayName, type: 'success' });
     } catch (error) {
       console.error('Search error', error);
@@ -97,27 +156,49 @@ function MapSearchBar({ disabled }: { disabled?: boolean }) {
   };
 
   return (
-    <form
-      onSubmit={handleSearch}
-      className="absolute left-1/2 -translate-x-1/2 bottom-6 z-20 flex items-center gap-2 bg-white px-4 py-2 sm:px-4 sm:py-2 pr-16 sm:pr-4 rounded-full shadow-lg border w-[min(90%,480px)]"
-    >
-      <Search className="w-4 h-4 text-gray-400" />
-      <input
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder="Search a landmark, street, or area"
-        className="flex-1 bg-transparent text-sm outline-none"
-        disabled={disabled}
-        aria-label="Search location"
-      />
-      <button
-        type="submit"
-        className="px-3 py-1 text-sm font-semibold text-blue-600 disabled:text-gray-400"
-        disabled={disabled || isSearching}
+    <div className="absolute left-1/2 -translate-x-1/2 bottom-6 z-20 w-[min(90%,480px)]">
+      <form
+        onSubmit={handleSearch}
+        className="flex items-center gap-2 bg-white px-4 py-2 sm:px-4 sm:py-2 pr-16 sm:pr-4 rounded-full shadow-lg border"
       >
-        {isSearching ? 'Searching…' : 'Go'}
-      </button>
-    </form>
+        <Search className="w-4 h-4 text-gray-400" />
+        <input
+          value={query}
+          onChange={(event) => handleInputChange(event.target.value)}
+          onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+          placeholder="Search a landmark, street, or area"
+          className="flex-1 bg-transparent text-sm outline-none"
+          disabled={disabled}
+          aria-label="Search location"
+          autoComplete="off"
+        />
+        <button
+          type="submit"
+          className="px-3 py-1 text-sm font-semibold text-blue-600 disabled:text-gray-400"
+          disabled={disabled || isSearching}
+        >
+          {isSearching ? 'Searching…' : 'Go'}
+        </button>
+      </form>
+      
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="mt-2 bg-white rounded-2xl shadow-xl border max-h-64 overflow-y-auto">
+          {suggestions.map((suggestion, index) => (
+            <button
+              key={index}
+              onClick={() => handleSelectSuggestion(suggestion)}
+              className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 border-b last:border-b-0 transition-colors"
+            >
+              <div className="font-medium text-gray-900 truncate">{suggestion.display_name}</div>
+              <div className="text-xs text-gray-500 mt-0.5">
+                {parseFloat(suggestion.lat).toFixed(5)}, {parseFloat(suggestion.lon).toFixed(5)}
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
