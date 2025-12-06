@@ -46,6 +46,11 @@ function useMetrics() {
       activeController = controller;
 
       try {
+        // Skip fetch if the browser is offline to avoid noisy TypeErrors
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+          throw new Error('offline');
+        }
+
         const response = await fetch('/api/metrics', { signal: controller.signal });
         if (!response.ok) {
           throw new Error('Metrics request failed');
@@ -54,9 +59,12 @@ function useMetrics() {
         if (isMounted) {
           setMetrics(payload);
         }
-      } catch (error) {
+      } catch (error: any) {
         if (isMounted) {
-          console.error('Metrics fetch error', error);
+          // Avoid console spam from aborted/offline fetches; still fall back gracefully
+          if (error?.name !== 'AbortError' && error?.message !== 'offline') {
+            console.error('Metrics fetch error', error);
+          }
           setMetrics(FALLBACK_METRICS);
         }
       } finally {
