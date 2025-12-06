@@ -90,6 +90,10 @@ export function ReportForm({ onSuccess, editReport }: ReportFormProps) {
 
   const handleLocationSelect = (lat: number, lng: number) => {
     setSelectedLocation({ lat, lng });
+    // Auto-hide map on mobile after location selection
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setShowMap(false);
+    }
     toast({ title: 'Location selected', type: 'success' });
   };
 
